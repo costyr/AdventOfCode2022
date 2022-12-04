@@ -23,7 +23,7 @@ function Intersect2(aItems) {
 }
 
 let groups = util.MapInput('./Day4Input.txt', (aElem) => {
-  return aElem.replaceAll('-', ',').split(',').map((yy)=>{return parseInt(yy);});
+  return aElem.split(/,|-/).map((yy)=>{return parseInt(yy);});
   }, '\r\n');
 
 console.log(Intersect(groups));
