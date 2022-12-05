@@ -79,9 +79,6 @@ util.MapInput('./Day5Input.txt', (aElem) => {
   return aElem;
   }, '\r\n');
 
-console.log(stacks);
-console.log(moves);
-
 let stacks0 = util.CopyObject(stacks);
 
 console.log(Transform(stacks, moves));
