@@ -684,7 +684,7 @@ sgss: 2
 tthm: jvqc - mjhj
 hrfs: dhdm + thlr
 pwls: 3
-humn: 4053
+humn: X
 rjch: 5
 jwpv: jpvw * wnsv
 jtpm: 2
@@ -1125,7 +1125,7 @@ vvvp: nlcm - vdjv
 mnht: qchn * lwnc
 tlvf: 3
 ljnv: 3
-root: vpmn + pqtt
+root: vpmn = pqtt
 blsv: nmtr + tfbv
 tqsn: 13
 cqwq: 5

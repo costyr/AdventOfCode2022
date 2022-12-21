@@ -110,6 +110,19 @@ class LinkedList {
     return null;
   }
 
+  GetNodeNthPosFromNode(aNode, aPosNumber) {
+    let node = aNode;
+    let count = aPosNumber;
+    while (count > 0) {
+      node = node.mNext;
+      if (node == null)
+        node = this.mHead;
+      count--;
+    }
+
+    return node;
+  }
+
   GetNodeNthPosBackFromNode(aNode, aPosNumber) {
     let node = aNode;
     let count = aPosNumber;
@@ -176,6 +189,18 @@ class LinkedList {
     }
 
     return str;
+  }
+
+  GetNodeWithValue(aValue) {
+    let node = this.mHead;
+    while (node)
+    {
+      if (node.mValue == aValue)
+        return node;
+      node = node.mNext;
+    }
+
+    return null;
   }
 
   VisitList(aFunction, aTotal) {
