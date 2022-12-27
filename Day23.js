@@ -1,7 +1,6 @@
 const util = require('./Util.js');
 const mm = require('./Matrix.js');
 const nth = require('./NthMatrix.js');
-const { V4MAPPED } = require('dns');
 
 const kNorth = [[-1, 0], [-1, 1], [-1, -1]];
 const kSouth = [[1, 0], [1, 1], [1, -1]];
