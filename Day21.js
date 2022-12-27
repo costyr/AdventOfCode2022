@@ -14,7 +14,7 @@ function FindOperand(aExp) {
         return operand;
     }
   }
-  return [];               
+  return [];
 }
 
 function ExpToString(aExp) {
@@ -26,26 +26,24 @@ function ExpToString(aExp) {
 }
 
 function SplitOp(aExp) {
-  
+
   aExp.splice(0, 1);
   aExp.splice(aExp.length - 1, 1);
 
   let l1 = [];
   let op = '';
   let l2 = [];
-  if (aExp[0] == '(')
-  {
+  if (aExp[0] == '(') {
     l1 = FindOperand(aExp);
     op = aExp[l1.length];
     l2 = aExp.slice(l1.length + 1);
   }
-  else
-  {
+  else {
     l1 = [aExp[0]];
     op = aExp[1];
     l2 = aExp.slice(2);
   }
-  
+
   return { l1: l1, op: op, l2: l2 };
 }
 
@@ -56,7 +54,7 @@ function ComputeOp(aLeft, aOp, aRight) {
     return aLeft - aRight;
   else if (aOp == '*')
     return aLeft * aRight;
-  else 
+  else
     return aLeft / aRight;
 }
 
@@ -66,8 +64,7 @@ function SolveEcuation(aLeft, aRight) {
 
   let right = eval(ExpToString(aRight));
 
-  for (;;)
-  {
+  for (; ;) {
     let ret = SplitOp(left);
 
     let newOp = '-';
@@ -78,16 +75,14 @@ function SolveEcuation(aLeft, aRight) {
     else if (ret.op == '-')
       newOp = '+';
 
-    if (Array.isArray(ret.l1) && ret.l1.indexOf('X') >= 0) 
-    {
+    if (Array.isArray(ret.l1) && ret.l1.indexOf('X') >= 0) {
       left = ret.l1;
 
       let rVal = eval(ExpToString(ret.l2));
 
       right = ComputeOp(right, newOp, rVal);
     }
-    else 
-    {
+    else {
       left = ret.l2;
 
       let rVal = eval(ExpToString(ret.l1));
@@ -109,48 +104,47 @@ function SolveEcuation(aLeft, aRight) {
 function ComputeExp(aExpMap) {
   let gg = util.CopyObject(aExpMap.get("root"));
 
-  for (;;) {
+  for (; ;) {
     let found = false;
-  for (let key of aExpMap.keys()) {
+    for (let key of aExpMap.keys()) {
 
-    let op = util.CopyObject(aExpMap.get(key));
+      let op = util.CopyObject(aExpMap.get(key));
 
-    let j = gg.indexOf(key);
+      let j = gg.indexOf(key);
 
-    if (j >= 0) 
-    {
-      if (op.length > 1)
-        gg.splice(j, 1, '(', ...op, ')');
-      else
-        gg.splice(j, 1, op);
+      if (j >= 0) {
+        if (op.length > 1)
+          gg.splice(j, 1, '(', ...op, ')');
+        else
+          gg.splice(j, 1, op);
+      }
+
+      if (j > 0) {
+        found = true;
+      }
     }
 
-    if (j > 0) {
-      found = true;
-    }
+    if (!found)
+      break;
   }
 
-  if (!found)
-    break;
-}
-
-return gg;
+  return gg;
 }
 
 function Evaluate(aExp) {
   let ii = aExp.indexOf('=');
 
-let left = aExp.slice(ii + 1);
-let right = aExp.splice(0, ii);
+  let left = aExp.slice(ii + 1);
+  let right = aExp.splice(0, ii);
 
-let toSolve = left;
-let toMove = right;
-if (right.indexOf('X') >= 0) {
-  toSolve = right;
-  toMove = left;
-}
+  let toSolve = left;
+  let toMove = right;
+  if (right.indexOf('X') >= 0) {
+    toSolve = right;
+    toMove = left;
+  }
 
-return SolveEcuation(toSolve, [ eval(ExpToString(toMove)) ]);
+  return SolveEcuation(toSolve, [eval(ExpToString(toMove))]);
 }
 
 let expMap = new Map();
@@ -160,8 +154,8 @@ util.MapInput('./Day21Input.txt', (aElem) => {
 
   let hh = tokens[1].split(' ');
 
-  expMap.set(tokens[0], (hh.length > 1) ? [ hh[0], hh[1], hh[2]] : tokens[1] == 'X' ? 'X' : parseInt(tokens[1]));
-  }, '\r\n');
+  expMap.set(tokens[0], (hh.length > 1) ? [hh[0], hh[1], hh[2]] : tokens[1] == 'X' ? 'X' : parseInt(tokens[1]));
+}, '\r\n');
 
 let exp = ComputeExp(expMap);
 
