@@ -1,21 +1,20 @@
-const { count } = require('console');
 const util = require('./Util.js');
+const mm = require('./Matrix.js');
+
+const kNeighbours = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
 
 function ComputeDist(aCube1, aCube2) {
   return Math.abs(aCube1[0] - aCube2[0]) + Math.abs(aCube1[1] - aCube2[1]) + Math.abs(aCube1[2] - aCube2[2]);
 }
 
-function CountConnected(aCubes, aCube) {
-  let uu = 0;
-      for (let j = 0; j < aCubes.length; j++) {
+function Print(aCubes, aZ) {
+  let map = new mm.Matrix(20, 20, '.');
 
-        let dist = ComputeDist(aCube, aCubes[j]);
-        if (dist == 1)
-          uu++;
-
-      }
-
-  return uu;
+  for (let i = 0; i < aCubes.length; i++)
+    if (aCubes[i][2] == aZ) 
+      map.SetValue(aCubes[i][1], aCubes[i][0], '#');
+  
+  map.Print('');
 }
 
 function CountNoConnected(aCubes) {
@@ -34,9 +33,6 @@ function CountNoConnected(aCubes) {
 
       }
 
-      if (uu == 0)
-        console.log(aCubes[i]);
-
       count += 6 - uu;
           
     }
@@ -44,73 +40,39 @@ function CountNoConnected(aCubes) {
     return count;
 }
 
-function RemoveAir(aCubes) {
+function IsInner(aCubes, aCube, aMinX, aMaxX, aMinY, aMaxY, aMinZ, aMaxZ) {
+  
+  let nn = [aCube];
+  let visited = [];
 
-  let cubes = util.CopyObject(aCubes);
+  for (;;) {
+   
+    if (nn.length == 0)
+      return { ret: true, inners: visited };
 
-  for(;;) {
+  let cc = nn.pop();
 
-  for (let i = 0; i < cubes.length; i++) {
-      
-    let uu = 0;
-    for (let j = 0; j < cubes.length; j++) {
+  for (let i = 0; i < kNeighbours.length; i++)
+  {
+    let x = cc[0] + kNeighbours[i][0];
+    let y = cc[1] + kNeighbours[i][1];
+    let z = cc[2] + kNeighbours[i][2];
 
-      if (i == j)
-        continue;
+    if (aCubes.find((aa) => { return aa[0] == x && aa[1] == y && aa[2] == z;}))
+      continue;
 
-      let dist = ComputeDist(cubes[i], cubes[j]);
-      if (dist == 1)
-        uu++;
+    if (x < aMinX || x > aMaxX ||
+        y < aMinY || y > aMaxY ||
+        z < aMinZ || z > aMaxZ)
+      return { ret: false, inners: [] };
 
-    }
-
-    if (uu < 6) {
-      cubes.splice(i, 1);
-      break;
-    }
+    if (!visited.find((aa) => { return aa[0] == x && aa[1] == y && aa[2] == z;}) && 
+        !nn.find((aa) => { return aa[0] == x && aa[1] == y && aa[2] == z;}))
+      nn.push([x, y, z]);
   }
-
-  let airCount = CountAir(cubes);
-
-  if (airCount == 0)
-    return CountNoConnected(cubes);
-  else
-    console.log(airCount);
-        
-  }
-
-  return 0;
+  visited.push(cc);
 }
 
-function IsInner(aCubes, aCube) {
-
-  let yy = [0, 0, 0];
-  let hh = [0, 0, 0];
-  for (let i = 0; i < aCubes.length; i++)
-  {
-    if (aCube[1] == aCubes[i][1] && aCube[2] == aCubes[i][2])
-    if (aCube[0] >= aCubes[i][0])
-      yy[0] = 1;
-    else 
-      hh[0] = 1;
-
-      if (aCube[0] == aCubes[i][0] && aCube[2] == aCubes[i][2])
-    if (aCube[1] >= aCubes[i][1])
-      yy[1] = 1;
-    else
-      hh[1] = 1;
-
-    if (aCube[1] == aCubes[i][1] && aCube[0] == aCubes[i][0])
-    if (aCube[2] >= aCubes[i][2])
-      yy[2] = 1;
-    else 
-      hh[2] = 1;
-  }  
-
-  if (yy[0] == 1 && yy[1] == 1 && yy[2] == 1 && 
-      hh[0] == 1 && hh[1] == 1 && hh[2] == 1)
-      return true;
-  return false;
 }
 
 function CountAir(aCubes) {
@@ -137,34 +99,45 @@ function CountAir(aCubes) {
 
   let cubes = util.CopyObject(aCubes);
   
-  let count = 0;
-  for (;;) {
   let newCubes = [];
   for (let i = minX; i <= maxX; i++)
     for (let j = minY; j <= maxY; j++)
       for (let k = minZ; k <= maxZ; k++)
       {
-        if (!IsInner(aCubes, [i, j, k]))
+        //console.log(i + " " + j + " " + k);
+
+        if (newCubes.find((aa) => { return aa[0] == i && aa[1] == j && aa[2] == k;})) {
+          continue;
+        }
+
+        let inner = IsInner(aCubes, [i, j, k], minX, maxX, minY, maxY, minZ, maxZ);
+
+        //if (inner != inner2)
+        //  console.log([i, j, k]);
+
+        if (cubes.find((aa) => { return aa[0] == i && aa[1] == j && aa[2] == k;}) || 
+            !inner.ret)
           continue;
 
-        //let oo = CountConnected(cubes, [i, j, k]);
-        if (/*oo > 0 && */!cubes.find((aa) => { return aa[0] == i && aa[1] == j && aa[2] == k;})) {
-          //console.log(i + " " + j + " " + k);
-          //count += oo;
-          newCubes.push([i, j, k]);
+        
+        for (let m = 0; m < inner.inners.length; m++) {
+          let inr = inner.inners[m];
+        if (!newCubes.find((aa) => { return aa[0] == inr[0] && aa[1] == inr[1] && aa[2] == inr[2];})) {
+          newCubes.push(inr);
         }
       }
-      
+      }
+  
   if (newCubes.length > 0)
   {
-    console.log(newCubes.length + " " + count);
     for (let i = 0; i < newCubes.length; i++)
       cubes.push(newCubes[i]);
   }
-  else
-    break;
-    
-  }
+
+  /*for (let z = 0; z < 20; z++) {
+    console.log(z + ": ");
+    Print(cubes, z);
+  }*/
 
   return CountNoConnected(cubes);
 }
@@ -173,10 +146,10 @@ let cubes = util.MapInput('./Day18Input.txt', (aElem) => {
   return aElem.split(',').map((aa)=>{return parseInt(aa);});
   }, '\r\n');
 
-console.log(cubes);
+//console.log(cubes);
 
-//let total = CountNoConnected(cubes);
+let total = CountNoConnected(cubes);
 
-//console.log(total);
+console.log(total);
 
 console.log(CountAir(cubes));
