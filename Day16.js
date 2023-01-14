@@ -93,7 +93,7 @@ function FindValidPresure(aNodeMap) {
   return gg;
 }
 
-function ComputePresure(aNodeMap, aOpenValves) {
+function ComputePresure(aNodeMap, aOpenValves, aMaxTime) {
 
   let time = 0;
   let presure = 0;
@@ -104,7 +104,7 @@ function ComputePresure(aNodeMap, aOpenValves) {
 
     let pp = aNodeMap.get(aOpenValves[i]);
 
-    let s = (30 - time);
+    let s = (aMaxTime - time);
 
     if (s <= 0)
       break;
@@ -150,17 +150,56 @@ function GenerateAll(aValid) {
   return cc;
 }
 
-function FindMax(aNodeMap, aValid) {
+function FindNextValid(aNodeMap, aValid, aMaxTime, aOpen, aFound) {
+  for (let i = 0; i < aValid.length; i++) {
+    let nn = aValid[i];
+
+    if (aFound.find((aa) => { return aa == nn; }))
+      continue;
+
+    let found = true;
+    for (let j = 0; j < aValid.length; j++) {
+      if (i == j || aFound.find((aa) => { return aa == aValid[j]; }))
+        continue;
+
+      let t1 = [...aOpen];
+      t1.push(nn);
+      t1.push(aValid[j]);
+
+      let t2 = [...aOpen];
+      t2.push(aValid[j]);
+      t2.push(nn);
+
+      let s1 = ComputePresure(aNodeMap, t1, aMaxTime);
+      let s2 = ComputePresure(aNodeMap, t2, aMaxTime);
+
+      if (s2 > s1) {
+        found = false;
+        break;
+      }
+
+    }
+
+    if (found)
+      return nn;
+  }
+
+  return null;
+}
+
+function FindMax(aNodeMap, aValid, aMaxTime) {
   let mm = [];
 
   while (1) {
 
     if (mm.length == aValid.length) {
       console.log(mm);
-      return ComputePresure(aNodeMap, mm);
+      return ComputePresure(aNodeMap, mm, aMaxTime);
     }
 
-    for (let i = 0; i < aValid.length; i++) {
+    let nn = FindNextValid(aNodeMap, aValid, aMaxTime, mm, mm);
+
+    /*for (let i = 0; i < aValid.length; i++) {
       let nn = aValid[i];
 
       if (mm.find((aa) => { return aa == nn; }))
@@ -187,12 +226,97 @@ function FindMax(aNodeMap, aValid) {
           break;
         }
 
-      }
+      }*/
 
-      if (found)
+      if (nn != null)
         mm.push(nn);
     }
-  }
+  return 0;
+}
+
+function FindMax2(aNodeMap, aValid, aMaxTime) {
+  let mm = [];
+  let ee = [];
+
+  while (1) {
+
+    console.log(mm);
+    console.log(ee);
+
+    if ((mm.length + ee.length) == aValid.length) {
+
+      let y1 = ComputePresure(aNodeMap, mm, aMaxTime);
+      let y2 = ComputePresure(aNodeMap, ee, aMaxTime);
+
+      console.log(mm + " " + y1);
+      console.log(ee + " " + y2);
+      return y1 + y2;
+    }
+
+    let visited = [...mm, ...ee];
+
+    let s1 = 0;
+    let s2 = 0;
+    let max = 0;
+    for (let i = 0; i < aValid.length; i++)
+      for (let j = 0; j < aValid.length; j++)
+      {
+        if (i == j)
+          continue;
+
+        if (visited.find((aa) => { return aa == aValid[i] || aa == aValid[j]; }))
+          continue;
+
+        let t1 = [...mm];
+        t1.push(aValid[i]);
+
+        let t2 = [...ee];
+        t2.push(aValid[j]);
+
+        let y1 = ComputePresure(aNodeMap, t1, aMaxTime);
+        let y2 = ComputePresure(aNodeMap, t2, aMaxTime);
+
+        let total = y1 + y2;
+
+        if (total > max)
+        {
+          s1 = i;
+          s2 = j; 
+          max = total;
+        }
+
+        let t3 = [...mm];
+        t3.push(aValid[j]);
+
+        let t4 = [...ee];
+        t4.push(aValid[i]);
+
+        y1 = ComputePresure(aNodeMap, t3, aMaxTime);
+        y2 = ComputePresure(aNodeMap, t4, aMaxTime);
+
+        total = y1 + y2;
+
+        if (total > max)
+        {
+          s1 = j;
+          s2 = i; 
+          max = total;
+        }
+      }
+
+      if (max == 0) {
+        for (let i = 0; i < aValid.length; i++)
+          if (!visited.find((aa) => { return aa == aValid[i]; })) {
+            ee.push(aValid[i]);
+            break;
+          }
+      }
+      else 
+      {
+        mm.push(aValid[s1]);
+        ee.push(aValid[s2]);
+      }
+    }
   return 0;
 }
 
@@ -211,8 +335,6 @@ let map = util.MapInput('./Day16Input.txt', (aElem) => {
 
 console.log(nodeMap);
 
-console.log(FindShortesDist(nodeMap, "AA", "CC"));
-
 let valid = FindValidPresure(nodeMap);
 
 /*let all = GenerateAll(valid);
@@ -227,4 +349,12 @@ for (let i = 0; i < all.length; i++) {
 
 console.log(max);*/
 
-console.log(FindMax(nodeMap, valid)); 
+/*let y1 = ComputePresure(nodeMap, ["JJ", "BB", "CC"], 26);
+let y12 = ComputePresure(nodeMap, ["BB", "JJ", "CC"], 26);
+let y2 = ComputePresure(nodeMap, ["DD", "HH", "EE"], 26);
+
+console.log(y1 + " " + y12 + " " + y2);*/
+
+console.log(FindMax(nodeMap, valid, 30)); 
+
+console.log(FindMax2(nodeMap, valid, 26)); 
