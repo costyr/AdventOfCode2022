@@ -115,7 +115,7 @@ function ComputePresure(aNodeMap, aOpenValves, aMaxTime) {
   return presure;
 }
 
-function GenerateAll(aValid) {
+function GenerateAll(aValid, aK) {
 
   let cc = [];
 
@@ -141,9 +141,9 @@ function GenerateAll(aValid) {
 
     cc = newCC;
 
-    console.log(cc[0].length);
+    //console.log(cc[0].length);
 
-    if (cc[0].length == aValid.length)
+    if (cc[0].length == aK)
       break;
   }
 
@@ -193,11 +193,14 @@ function FindMax(aNodeMap, aValid, aMaxTime) {
   while (1) {
 
     if (mm.length == aValid.length) {
-      console.log(mm);
+      //console.log(mm);
       return ComputePresure(aNodeMap, mm, aMaxTime);
     }
 
     let nn = FindNextValid(aNodeMap, aValid, aMaxTime, mm, mm);
+
+    if (nn == null)
+      return 0;
 
     /*for (let i = 0; i < aValid.length; i++) {
       let nn = aValid[i];
@@ -320,6 +323,21 @@ function FindMax2(aNodeMap, aValid, aMaxTime) {
   return 0;
 }
 
+function* combinationN(array, n) {
+  if (n === 1) {
+    for (const a of array) {
+      yield [a];
+    }
+    return;
+  }
+
+  for (let i = 0; i <= array.length - n; i++) {
+    for (const c of combinationN(array.slice(i + 1), n - 1)) {
+      yield [array[i], ...c];
+    }
+  }
+}
+
 let nodeMap = new Map();
 
 let map = util.MapInput('./Day16Input.txt', (aElem) => {
@@ -358,3 +376,40 @@ console.log(y1 + " " + y12 + " " + y2);*/
 console.log(FindMax(nodeMap, valid, 30)); 
 
 console.log(FindMax2(nodeMap, valid, 26)); 
+
+let all = [];
+
+for (const c of combinationN(valid, 7))
+  all.push(c);
+
+console.log(all.length);
+
+let max = 0;
+for (let i = 0; i < all.length; i++) {
+  console.log(i);
+ for (let j = i + 1; j < all.length; j++)
+ {
+   let found = false;
+   for (let k = 0; k < all[i].length; k++)
+     if (all[j].find((aa) => { return aa.localeCompare(all[i][k]) == 0; })) {
+       found = true;
+       break;
+     }
+
+  if (!found)
+  {
+    let y1 = FindMax(nodeMap, all[i], 26);
+    let y2 = FindMax(nodeMap, all[j], 26);
+
+    let total = y1 + y2;
+
+    if (total > max) {
+      max = total;
+
+      console.log(i + " " + j + ": " + all[i] + "    " + all[j] + " " + max);
+    }
+  }
+ }
+}
+
+console.log(max);
