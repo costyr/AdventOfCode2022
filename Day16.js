@@ -31,57 +31,6 @@ function FindShortesDist(aNodeMap, aStart, aEnd) {
   return ret.dist;
 }
 
-function Explore(aNodeMap, aCount) {
-
-  let gg = [{ id: 'AA', open: [], pressure: 0 }];
-
-  let max = 0;
-  let maxOpen = "";
-  for (let k = 0; k < aCount; k++) {
-
-    let nn = [];
-    for (let i = 0; i < gg.length; i++) {
-      let id = gg[i].id;
-
-      let open = util.CopyObject(gg[i].open);
-
-      let pressure = gg[i].pressure;
-
-      let value = aNodeMap.get(id);
-
-      if (value[0] > 0 && !open.find((aa) => { return (aa == id); })) {
-        open.push(id);
-        open.sort((a, b) => { return a.localeCompare(b); });
-
-        let valvePresure = (30 - k - 1) * value[0];
-
-        nn.push({ id: id, open: open, pressure: pressure + valvePresure });
-      }
-
-      for (let j = 0; j < value[1].length; j++) {
-
-        let neighbourId = value[1][j];
-
-        nn.push({ id: neighbourId, open: util.CopyObject(gg[i].open), pressure: pressure });
-      }
-    }
-
-    gg = nn;
-
-    for (let i = 0; i < gg.length; i++)
-      if (gg[i].pressure > max) {
-        max = gg[i].pressure;
-        maxOpen = JSON.stringify(gg[i].open);
-        console.log(k + " " + gg[i].open + " " + gg.length + " " + max);
-      }
-
-    for (let i = gg.length - 1; i >= 0; i--) {
-      if (gg[i].pressure < max && JSON.stringify(gg[i].open) == maxOpen)
-        gg.splice(i, 1);
-    }
-  }
-}
-
 function FindValidPresure(aNodeMap) {
 
   let gg = [];
@@ -184,143 +133,170 @@ function FindNextValid(aNodeMap, aValid, aMaxTime, aOpen, aFound) {
       return nn;
   }
 
-  return null;
+  return "AA";
 }
 
-function FindMax(aNodeMap, aValid, aMaxTime) {
+function FindMaxPresure(aNodeMap, aValid, aMaxTime) {
   let mm = [];
+
+  for (let i = 0; i < aValid.length; i++)
+    mm.push([aValid[i]]);
 
   while (1) {
 
-    if (mm.length == aValid.length) {
-      //console.log(mm);
-      return ComputePresure(aNodeMap, mm, aMaxTime);
+    if (mm[0].length == aValid.length) {
+     
+      let max = 0;
+      let index = -1;
+      for (let i = 0; i < mm.length; i++) {
+        let nn = ComputePresure(aNodeMap, mm[i], aMaxTime);
+        //console.log(mm[i] + " " + nn);
+
+        if (nn > max)
+        {
+          max = nn;
+          index = i;
+        }
+      }
+
+      //console.log(mm[index]);
+      return max;
     }
 
-    let nn = FindNextValid(aNodeMap, aValid, aMaxTime, mm, mm);
+    let oo = [];
+    for (let i = 0; i < mm.length; i++) {
+      let nn = FindNextValid(aNodeMap, aValid, aMaxTime, mm[i], mm[i]);
+      oo.push([...mm[i], nn]);
+    }
 
-    if (nn == null)
-      return 0;
-
-    /*for (let i = 0; i < aValid.length; i++) {
-      let nn = aValid[i];
-
-      if (mm.find((aa) => { return aa == nn; }))
-        continue;
-
-      let found = true;
-      for (let j = 0; j < aValid.length; j++) {
-        if (i == j || mm.find((aa) => { return aa == aValid[j]; }))
-          continue;
-
-        let t1 = [...mm];
-        t1.push(nn);
-        t1.push(aValid[j]);
-
-        let t2 = [...mm];
-        t2.push(aValid[j]);
-        t2.push(nn);
-
-        let s1 = ComputePresure(aNodeMap, t1);
-        let s2 = ComputePresure(aNodeMap, t2);
-
-        if (s2 > s1) {
-          found = false;
-          break;
-        }
-
-      }*/
-
-      if (nn != null)
-        mm.push(nn);
+    mm = oo;
+    
     }
   return 0;
 }
 
-function FindMax2(aNodeMap, aValid, aMaxTime) {
-  let mm = [];
-  let ee = [];
+function FindMaxPresureWithHelp(aNodeMap, aValid) {
+  let all = [];
 
-  while (1) {
+for (const c of combinationN(aValid, 7))
+  all.push(c);
 
-    console.log(mm);
-    console.log(ee);
+console.log(all.length);
 
-    if ((mm.length + ee.length) == aValid.length) {
+let max = 0;
+let s1 = 0;
+let s2 = 0;
+for (let i = 0; i < all.length; i++) {
+  
+  let tt = 0;
+  for (let k = 0; k < all[i].length; k++)
+    tt += aNodeMap.get(all[i][k])[0];
 
-      let y1 = ComputePresure(aNodeMap, mm, aMaxTime);
-      let y2 = ComputePresure(aNodeMap, ee, aMaxTime);
+ for (let j = i + 1; j < all.length; j++)
+ {
+   let found = false;
+   for (let k = 0; k < all[i].length; k++)
+     if (all[j].find((aa) => { return aa.localeCompare(all[i][k]) == 0; })) {
+       found = true;
+       break;
+     }
 
-      console.log(mm + " " + y1);
-      console.log(ee + " " + y2);
-      return y1 + y2;
+  if (!found)
+  {
+    let tt2 = 0;
+    for (let k = 0; k < all[j].length; k++)
+      tt2 += aNodeMap.get(all[j][k])[0];
+
+    if (Math.abs(tt - tt2) > 5)
+      continue;
+
+    let y1 = FindMaxPresure(nodeMap, all[i], 26);
+    let y2 = FindMaxPresure(nodeMap, all[j], 26);
+
+    s1 = i;
+    s2 = j;
+
+    let total = y1 + y2;
+
+    if (total > max) {
+      max = total;
+
+     console.log(i + " " + j + ": " + all[i] + "    " + all[j] + " " + max);
     }
+  }
+ }
+}
 
-    let visited = [...mm, ...ee];
+console.log(all[s1] + "    " + all[s2]);
 
-    let s1 = 0;
-    let s2 = 0;
-    let max = 0;
-    for (let i = 0; i < aValid.length; i++)
-      for (let j = 0; j < aValid.length; j++)
+return max;
+}
+
+function FindMaxPresureWithHelp2(aNodeMap, aValid) {
+  let all = [];
+
+  for (const c of combinationN(aValid, 2))
+    all.push( {e: [c[0]], n: [c[1]] });
+
+  for (let i = 0; i < all.length; i++)
+  {
+    let e = all[i].e;
+    let n = all[i].n;
+    while (1)
+    {
+      let nn1 = FindNextValid(aNodeMap, aValid, 26, all[i].e, [...e, ...n]);
+      e.push(nn1);
+      let nn2 = FindNextValid(aNodeMap, aValid, 26, all[i].n, [...e, ...n]);
+      n.push(nn2);
+
+      let y1 = ComputePresure(aNodeMap, e, 26);
+      let y2 = ComputePresure(aNodeMap, n, 26);
+
+      let t1 = y1 + y2;
+      
+      e.splice(-1);
+      n.splice(-1);
+      
+      let nn3 = FindNextValid(aNodeMap, aValid, 26, all[i].n, [...e, ...n]);
+      n.push(nn3);
+      let nn4 = FindNextValid(aNodeMap, aValid, 26, all[i].e, [...e, ...n]);
+      e.push(nn4);
+
+      y1 = ComputePresure(aNodeMap, e, 26);
+      y2 = ComputePresure(aNodeMap, n, 26);
+
+      let t2 = y1 + y2;
+
+      if (t1 > t2)
       {
-        if (i == j)
-          continue;
-
-        if (visited.find((aa) => { return aa == aValid[i] || aa == aValid[j]; }))
-          continue;
-
-        let t1 = [...mm];
-        t1.push(aValid[i]);
-
-        let t2 = [...ee];
-        t2.push(aValid[j]);
-
-        let y1 = ComputePresure(aNodeMap, t1, aMaxTime);
-        let y2 = ComputePresure(aNodeMap, t2, aMaxTime);
-
-        let total = y1 + y2;
-
-        if (total > max)
-        {
-          s1 = i;
-          s2 = j; 
-          max = total;
-        }
-
-        let t3 = [...mm];
-        t3.push(aValid[j]);
-
-        let t4 = [...ee];
-        t4.push(aValid[i]);
-
-        y1 = ComputePresure(aNodeMap, t3, aMaxTime);
-        y2 = ComputePresure(aNodeMap, t4, aMaxTime);
-
-        total = y1 + y2;
-
-        if (total > max)
-        {
-          s1 = j;
-          s2 = i; 
-          max = total;
-        }
+        e.splice(-1);
+        n.splice(-1);
+        
+        e.push(nn1);
+        n.push(nn2);
       }
 
-      if (max == 0) {
-        for (let i = 0; i < aValid.length; i++)
-          if (!visited.find((aa) => { return aa == aValid[i]; })) {
-            ee.push(aValid[i]);
-            break;
-          }
-      }
-      else 
-      {
-        mm.push(aValid[s1]);
-        ee.push(aValid[s2]);
-      }
+      //console.log(e.length);
+      if (e.length == 7)
+        break;
     }
-  return 0;
+  }
+
+  let max = 0;
+  for (let i = 0; i < all.length; i++)
+  {
+    let y1 = ComputePresure(aNodeMap, all[i].e, 26);
+    let y2 = ComputePresure(aNodeMap, all[i].n, 26);
+
+    let tt = y1 + y2;
+
+    if (tt > max)
+    {
+      max = tt;
+    }
+  }
+
+  return max;
 }
 
 function* combinationN(array, n) {
@@ -336,6 +312,33 @@ function* combinationN(array, n) {
       yield [array[i], ...c];
     }
   }
+}
+
+function SplitEqual(aNodeMap, aValid) {
+  aValid.sort((a, b)=>{ return aNodeMap.get(a)[0] - aNodeMap.get(b)[0];});
+
+  let nn = [];
+  let ee = [];
+  for (let i = 0; i < aValid.length; i++)
+    if (i % 2 != 0)
+      nn.push(aValid[i]);
+    else
+      ee.push(aValid[i]);
+  
+  return { e: ee, n: nn };
+}
+
+function ToPresure(aNodeMap, aValves) {
+
+  let pp = [];
+  let total = 0;
+  for (let i = 0; i < aValves.length; i++) {
+    let oo = aNodeMap.get(aValves[i])[0];
+    total += oo;
+    pp.push(oo);
+  }
+
+  return { v: pp, t: total };
 }
 
 let nodeMap = new Map();
@@ -355,61 +358,18 @@ console.log(nodeMap);
 
 let valid = FindValidPresure(nodeMap);
 
-/*let all = GenerateAll(valid);
+console.log(FindMaxPresure(nodeMap, valid, 30));
 
-let max = 0;
-for (let i = 0; i < all.length; i++) {
+console.log(FindMaxPresureWithHelp(nodeMap, valid));
 
-  console.log(i);
+/*console.log(ToPresure(nodeMap, ["OT", "WI", "OM", "YW", "HV", "GB", "VX"]));
+console.log(ToPresure(nodeMap, ["IS", "QQ", "ZL", "NG", "DG", "MX", "IC"]));
 
-  max = Math.max(max, ComputePresure(nodeMap, all[i]));
-}
+let ret = SplitEqual(nodeMap, valid);
 
-console.log(max);*/
+console.log(ToPresure(nodeMap, ret.e));
+console.log(ToPresure(nodeMap, ret.n));*/
 
-/*let y1 = ComputePresure(nodeMap, ["JJ", "BB", "CC"], 26);
-let y12 = ComputePresure(nodeMap, ["BB", "JJ", "CC"], 26);
-let y2 = ComputePresure(nodeMap, ["DD", "HH", "EE"], 26);
+//console.log(FindMaxPresure(nodeMap, ret.e, 26) + FindMaxPresure(nodeMap, ret.n, 26));
 
-console.log(y1 + " " + y12 + " " + y2);*/
 
-console.log(FindMax(nodeMap, valid, 30)); 
-
-console.log(FindMax2(nodeMap, valid, 26)); 
-
-let all = [];
-
-for (const c of combinationN(valid, 7))
-  all.push(c);
-
-console.log(all.length);
-
-let max = 0;
-for (let i = 0; i < all.length; i++) {
-  console.log(i);
- for (let j = i + 1; j < all.length; j++)
- {
-   let found = false;
-   for (let k = 0; k < all[i].length; k++)
-     if (all[j].find((aa) => { return aa.localeCompare(all[i][k]) == 0; })) {
-       found = true;
-       break;
-     }
-
-  if (!found)
-  {
-    let y1 = FindMax(nodeMap, all[i], 26);
-    let y2 = FindMax(nodeMap, all[j], 26);
-
-    let total = y1 + y2;
-
-    if (total > max) {
-      max = total;
-
-      console.log(i + " " + j + ": " + all[i] + "    " + all[j] + " " + max);
-    }
-  }
- }
-}
-
-console.log(max);
