@@ -107,6 +107,54 @@ function IntersectArrays() {
   return intersection;
 }
 
+function* CombinationN(aArray, aK) {
+  if (aK === 1) {
+    for (const a of aArray) {
+      yield [a];
+    }
+    return;
+  }
+
+  for (let i = 0; i <= aArray.length - aK; i++) {
+    for (const c of CombinationN(aArray.slice(i + 1), aK - 1)) {
+      yield [aArray[i], ...c];
+    }
+  }
+}
+
+function ArrangementsN(aArray, aK) {
+
+  let cc = [];
+
+  for (let i = 0; i < aArray.length; i++)
+    cc.push([aArray[i]]);
+
+  while (1) {
+
+    let newCC = [];
+    for (let i = 0; i < cc.length; i++) {
+
+      for (let j = 0; j < aArray.length; j++) {
+        let gg = [...cc[i]];
+        if (!gg.find((aa) => {
+          return aa.localeCompare(aArray[j]) == 0;
+        })) {
+          gg.push(aArray[j]);
+
+          newCC.push(gg);
+        }
+      }
+    }
+
+    cc = newCC;
+
+    if (cc[0].length == aK)
+      break;
+  }
+
+  return cc;
+}
+
 module.exports = {
   ComputeMapFilePath,
   CopyObject,
@@ -118,5 +166,7 @@ module.exports = {
   ComputeMax,
   ComputeMapSize,
   IntersectMaps,
-  IntersectArrays
+  IntersectArrays,
+  CombinationN,
+  ArrangementsN
 }
