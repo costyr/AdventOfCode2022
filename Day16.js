@@ -214,8 +214,6 @@ let map = util.MapInput('./Day16Input.txt', (aElem) => {
 
 }, '\r\n');
 
-console.log(nodeMap);
-
 let valid = FindValidPresure(nodeMap);
 
 let distCache = ComputeMinDistCache(nodeMap, valid);
